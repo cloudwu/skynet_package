@@ -123,6 +123,7 @@ service_exit(struct skynet_context *ctx, struct package *P) {
 		skynet_free(resp.msg);
 	}
 	skynet_send(ctx, 0, P->manager, PTYPE_TEXT, 0, "CLOSED", 6);
+	skynet_command(ctx, "EXIT", NULL);
 }
 
 static void
