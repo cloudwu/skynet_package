@@ -185,13 +185,13 @@ static void
 new_message(struct package *P, const uint8_t *msg, int sz) {
 	++P->recv;
 	for (;;) {
-		if (P->uncomplete_sz > 0) {
+		if (P->uncomplete_sz >= 0) {
 			if (sz >= P->uncomplete_sz) {
 				memcpy(P->uncomplete.msg + P->uncomplete.sz - P->uncomplete_sz, msg, P->uncomplete_sz);
 				msg += P->uncomplete_sz;
 				sz -= P->uncomplete_sz;
 				queue_push(&P->response, &P->uncomplete);
-				P->uncomplete_sz = 0;
+				P->uncomplete_sz = -1;
 			} else {
 				memcpy(P->uncomplete.msg + P->uncomplete.sz - P->uncomplete_sz, msg, sz);
 				P->uncomplete_sz -= sz;
@@ -337,6 +337,7 @@ package_create(void) {
 	struct package * P = skynet_malloc(sizeof(*P));
 	memset(P, 0, sizeof(*P));
 	P->heartbeat = -1;
+	P->uncomplete_sz = -1;
 	queue_init(&P->request, sizeof(struct request));
 	queue_init(&P->response, sizeof(struct response));
 	return P;
