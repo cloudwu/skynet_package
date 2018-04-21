@@ -26,10 +26,11 @@ local function get_addr(fd)
 	return assert(map[fd], "subscribe first")
 end
 
-function proxy.subscribe(fd)
+function proxy.subscribe(fd,timeout)
+	timeout = timeout or 1000 -- 10s
 	local addr = map[fd]
 	if not addr then
-		addr = skynet.call(proxyd, "lua", fd)
+		addr = skynet.call(proxyd, "lua", fd,timeout)
 		map[fd] = addr
 	end
 end

@@ -19,12 +19,12 @@ local function close_agent(addr)
 	socket_addr_fd[addr] = nil
 end
 
-local function subscribe(fd)
+local function subscribe(fd,timeout)
 	local addr = socket_fd_addr[fd]
 	if addr then
 		return addr
 	end
-	addr = assert(skynet.launch("package", skynet.self(), fd))
+	addr = assert(skynet.launch("package", skynet.self(), fd,timeout))
 	socket_fd_addr[fd] = addr
 	socket_addr_fd[addr] = fd
 	socket_init[addr] = skynet.response()
@@ -65,9 +65,10 @@ skynet.start(function()
 			skynet.error("Invalid command " .. cmd)
 		end
 	end)
-	skynet.dispatch("lua", function (session, source, fd)
+	skynet.dispatch("lua", function (session, source, fd,timeout)
 		assert(type(fd) == "number")
-		local addr = subscribe(fd)
+		assert(type(timeout) == "number")
+		local addr = subscribe(fd,timeout)
 		if addr then
 			skynet.ret(skynet.pack(addr))
 		end
