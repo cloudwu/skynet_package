@@ -121,12 +121,7 @@ service_exit(struct skynet_context *ctx, struct package *P) {
 		queue_pop(&P->request, &req);
 		skynet_send(ctx, 0, req.source, PTYPE_ERROR, req.session, NULL, 0);
 	}
-	while (!queue_empty(&P->response)) {
-		// drop the message
-		struct response resp;
-		queue_pop(&P->response, &resp);
-		skynet_free(resp.msg);
-	}
+	// free unsend response buffer on package_release
 	skynet_send(ctx, 0, P->manager, PTYPE_TEXT, 0, "CLOSED", 6);
 	skynet_command(ctx, "EXIT", NULL);
 }
@@ -350,6 +345,14 @@ package_create(void) {
 
 void
 package_release(struct package *P) {
+	while (!queue_empty(&P->response)) {
+		// drop the message
+		struct response resp;
+		queue_pop(&P->response, &resp);
+		skynet_free(resp.msg);
+	}
+	if (P->uncomplete.sz >= 0)
+		skynet_free(P->uncomplete.msg);
 	queue_exit(&P->request);
 	queue_exit(&P->response);
 	skynet_free(P);
