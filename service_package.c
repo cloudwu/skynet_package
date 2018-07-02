@@ -127,6 +127,8 @@ service_exit(struct skynet_context *ctx, struct package *P) {
 		queue_pop(&P->response, &resp);
 		skynet_free(resp.msg);
 	}
+	if (P->uncomplete.msg != NULL)
+		skynet_free(P->uncomplete.msg);
 	skynet_send(ctx, 0, P->manager, PTYPE_TEXT, 0, "CLOSED", 6);
 	skynet_command(ctx, "EXIT", NULL);
 }
