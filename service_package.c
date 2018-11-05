@@ -353,7 +353,7 @@ package_release(struct package *P) {
 		queue_pop(&P->response, &resp);
 		skynet_free(resp.msg);
 	}
-	if (P->uncomplete.sz >= 0)
+	if (P->uncomplete_sz >= 0)
 		skynet_free(P->uncomplete.msg);
 	queue_exit(&P->request);
 	queue_exit(&P->response);
