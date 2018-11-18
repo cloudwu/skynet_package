@@ -5,7 +5,6 @@
 #include <string.h>
 #include <assert.h>
 
-#define TIMEOUT "1000"	// 10s
 
 struct response {
 	size_t sz;
@@ -40,6 +39,7 @@ struct package {
 
 	struct queue request;
 	struct queue response;
+	char timeout[8+1];
 };
 
 static void
@@ -284,8 +284,10 @@ heartbeat(struct skynet_context *ctx, struct package *P) {
 			skynet_error(ctx, "timeout %d", P->fd);
 		}
 	} else {
-		P->heartbeat = P->recv = 0;
-		skynet_command(ctx, "TIMEOUT", TIMEOUT);
+		if (P->timeout[0] != '0') {
+			P->heartbeat = P->recv = 0;
+			skynet_command(ctx, "TIMEOUT", P->timeout);
+		}
 	}
 }
 
@@ -360,11 +362,13 @@ package_release(struct package *P) {
 
 int
 package_init(struct package * P, struct skynet_context *ctx, const char * param) {
-	int n = sscanf(param ? param : "", "%u %d", &P->manager, &P->fd);
-	if (n != 2 || P->manager == 0 || P->fd == 0) {
+	uint32_t timeout = 0;
+	int n = sscanf(param ? param : "", "%u %d %u", &P->manager, &P->fd,&timeout);
+	if (n != 3 || P->manager == 0 || P->fd == 0 || timeout > 99999999) {
 		skynet_error(ctx, "Invalid param [%s]", param);
 		return 1;
 	}
+	sprintf(P->timeout,"%u",timeout);
 	skynet_socket_start(ctx, P->fd);
 	skynet_socket_nodelay(ctx, P->fd);
 	heartbeat(ctx, P);
